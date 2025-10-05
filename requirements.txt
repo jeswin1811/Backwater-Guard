@@ -4,3 +4,5 @@ earthengine-api==1.6.10
 pandas==2.3.0
 streamlit-folium==0.23.2
 streamlit-folium==0.23.2
+plotly
+numpy

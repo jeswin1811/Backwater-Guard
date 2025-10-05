@@ -279,15 +279,24 @@ to identify areas that may need detailed field investigation.
 
 @st.cache_resource
 def initialize_ee():
+    """Initializes Earth Engine using service account credentials."""
     try:
-        ee.Initialize(project='backwater-guard')
+        # Check if running in Streamlit Cloud
+        if 'gcp_service_account' in st.secrets:
+            creds_dict = st.secrets["gcp_service_account"]
+            creds = ee.ServiceAccountCredentials(creds_dict['client_email'], key_data=str(creds_dict))
+            ee.Initialize(creds, project=creds_dict['project_id'])
+        else:
+            # Fallback for local development
+            ee.Initialize(project='backwater-guard')
         return True
-    except ee.EEException:
+    except Exception as e:
+        st.error(f"Authentication failed: {e}")
+        st.info("""
+            **For local development:** Ensure you have authenticated via the GEE command line.
+            **For deployment:** Ensure your `secrets.toml` is correctly configured in Streamlit Cloud.
+        """)
         return False
-
-if not initialize_ee():
-    st.error("Authentication failed. Please check your Project ID and setup.")
-    st.stop()
 
 AOI = ee.Geometry.Rectangle([76.25, 9.9, 76.45, 10.1])
 
