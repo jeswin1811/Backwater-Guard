@@ -8,6 +8,7 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 import numpy as np
 import json
+from google.oauth2 import service_account
 
 # -----------------------------------------------------------------------------
 # 1. App Setup and Configuration
@@ -281,37 +282,48 @@ to identify areas that may need detailed field investigation.
 
 @st.cache_resource
 def initialize_ee():
-    """Initializes Earth Engine using service account credentials."""
+    """Initializes Earth Engine using service account credentials (Streamlit-compatible)."""
     try:
-        # Check if running in Streamlit Cloud
-        if 'gcp_service_account' in st.secrets:
+        st.write("🔄 Initializing Google Earth Engine...")
+
+        if "gcp_service_account" in st.secrets:
+            # Load service account credentials from Streamlit secrets
             creds_dict = st.secrets["gcp_service_account"]
-            # CORRECT: Use json.dumps to format the credentials as a valid JSON string
-            key_data = json.dumps(creds_dict) 
-            creds = ee.ServiceAccountCredentials(creds_dict['client_email'], key_data=key_data)
-            ee.Initialize(creds, project=creds_dict['project_id'])
+
+            # Convert to proper credentials object
+            credentials = service_account.Credentials.from_service_account_info(creds_dict)
+
+            # Initialize Earth Engine
+            ee.Initialize(credentials)
+            st.success("✅ Earth Engine initialized successfully (Service Account).")
+
         else:
             # Fallback for local development
-            ee.Initialize(project='backwater-guard')
+            ee.Initialize(project="backwater-guard")
+            st.info("🧩 Using local Earth Engine authentication.")
+
         return True
+
     except Exception as e:
-        st.error(f"Authentication failed: {e}")
+        st.error(f"❌ Earth Engine initialization failed: {e}")
         st.info("""
-            **For local development:** Ensure you have authenticated via the GEE command line.
-            **For deployment:** Double-check your secrets in the Streamlit Cloud dashboard for typos.
+        **For local development:** Run `earthengine authenticate` in your terminal before launching Streamlit.
+        
+        **For deployment (e.g., Streamlit Cloud):**
+        1. Go to your app → Settings → Secrets.
+        2. Add a `[gcp_service_account]` section with your service account credentials.
         """)
         return False
 
+
 # --- Main execution block ---
 
-# First, initialize Earth Engine.
 ee_initialized = initialize_ee()
 
-# If initialization fails, stop the app.
 if not ee_initialized:
     st.stop()
 
-# NOW, it's safe to define GEE objects.
+# Safe to define AOI after initialization
 AOI = ee.Geometry.Rectangle([76.25, 9.9, 76.45, 10.1])
 
 # -----------------------------------------------------------------------------
