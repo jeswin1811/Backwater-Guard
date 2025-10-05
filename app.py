@@ -7,6 +7,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
 import numpy as np
+import json
 
 # -----------------------------------------------------------------------------
 # 1. App Setup and Configuration
@@ -285,7 +286,9 @@ def initialize_ee():
         # Check if running in Streamlit Cloud
         if 'gcp_service_account' in st.secrets:
             creds_dict = st.secrets["gcp_service_account"]
-            creds = ee.ServiceAccountCredentials(creds_dict['client_email'], key_data=str(creds_dict))
+            # CORRECT: Use json.dumps to format the credentials as a valid JSON string
+            key_data = json.dumps(creds_dict) 
+            creds = ee.ServiceAccountCredentials(creds_dict['client_email'], key_data=key_data)
             ee.Initialize(creds, project=creds_dict['project_id'])
         else:
             # Fallback for local development
@@ -295,7 +298,7 @@ def initialize_ee():
         st.error(f"Authentication failed: {e}")
         st.info("""
             **For local development:** Ensure you have authenticated via the GEE command line.
-            **For deployment:** Ensure your `secrets.toml` is correctly configured in Streamlit Cloud.
+            **For deployment:** Double-check your secrets in the Streamlit Cloud dashboard for typos.
         """)
         return False
 
