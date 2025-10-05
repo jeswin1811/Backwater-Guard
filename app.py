@@ -284,8 +284,6 @@ to identify areas that may need detailed field investigation.
 def initialize_ee():
     """Initializes Google Earth Engine using service account credentials."""
     try:
-        st.write("🔄 Initializing Google Earth Engine...")
-
         if "gcp_service_account" in st.secrets:
             creds_dict = dict(st.secrets["gcp_service_account"])
 
@@ -298,7 +296,6 @@ def initialize_ee():
             )
 
             ee.Initialize(credentials)
-            st.success("✅ Earth Engine initialized successfully (Service Account).")
 
         else:
             st.warning("⚠️ No service account found, using local auth fallback...")
