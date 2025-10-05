@@ -277,6 +277,7 @@ to identify areas that may need detailed field investigation.
 # 2. Earth Engine Initialization
 # -----------------------------------------------------------------------------
 
+
 @st.cache_resource
 def initialize_ee():
     """Initializes Earth Engine using service account credentials."""
@@ -298,6 +299,16 @@ def initialize_ee():
         """)
         return False
 
+# --- Main execution block ---
+
+# First, initialize Earth Engine.
+ee_initialized = initialize_ee()
+
+# If initialization fails, stop the app.
+if not ee_initialized:
+    st.stop()
+
+# NOW, it's safe to define GEE objects.
 AOI = ee.Geometry.Rectangle([76.25, 9.9, 76.45, 10.1])
 
 # -----------------------------------------------------------------------------
