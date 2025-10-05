@@ -282,36 +282,39 @@ to identify areas that may need detailed field investigation.
 
 @st.cache_resource
 def initialize_ee():
-    """Initializes Earth Engine using service account credentials (Streamlit-compatible)."""
+    """Initializes Google Earth Engine using service account credentials."""
     try:
         st.write("🔄 Initializing Google Earth Engine...")
 
         if "gcp_service_account" in st.secrets:
-            # Load service account credentials from Streamlit secrets
-            creds_dict = st.secrets["gcp_service_account"]
+            creds_dict = dict(st.secrets["gcp_service_account"])
 
-            # Convert to proper credentials object
-            credentials = service_account.Credentials.from_service_account_info(creds_dict)
+            # ✅ Define required Earth Engine OAuth scope
+            SCOPES = ["https://www.googleapis.com/auth/earthengine.readonly"]
 
-            # Initialize Earth Engine
+            # Build credentials with explicit scope
+            credentials = service_account.Credentials.from_service_account_info(
+                creds_dict, scopes=SCOPES
+            )
+
             ee.Initialize(credentials)
             st.success("✅ Earth Engine initialized successfully (Service Account).")
 
         else:
-            # Fallback for local development
+            st.warning("⚠️ No service account found, using local auth fallback...")
             ee.Initialize(project="backwater-guard")
-            st.info("🧩 Using local Earth Engine authentication.")
 
         return True
 
     except Exception as e:
         st.error(f"❌ Earth Engine initialization failed: {e}")
         st.info("""
-        **For local development:** Run `earthengine authenticate` in your terminal before launching Streamlit.
-        
-        **For deployment (e.g., Streamlit Cloud):**
-        1. Go to your app → Settings → Secrets.
-        2. Add a `[gcp_service_account]` section with your service account credentials.
+        For local testing:
+        Run `earthengine authenticate` in your terminal before launching Streamlit.
+
+        For deployment (Streamlit Cloud):
+        Make sure `[gcp_service_account]` is added under **Settings → Secrets**,
+        and that the service account is registered for Google Earth Engine access.
         """)
         return False
 
